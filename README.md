@@ -132,5 +132,5 @@ android:networkSecurityConfig="@xml/network_security_config"
 To build the app for testing, run:
 
 ```bash
-detox build --configuration android.emu.debug
+npm run detox:build-android
 ```
