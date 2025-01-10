@@ -1,79 +1,136 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+## Detox POC Android Setup
 
-# Getting Started
+### Step 1: Install Dependencies
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+Install Node.js (if you don’t already have it installed):
 
-## Step 1: Start the Metro Server
+- Download it from [nodejs.org](https://nodejs.org).
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
-
-To start Metro, run the following command from the _root_ of your React Native project:
+Install Detox CLI globally:
 
 ```bash
-# using npm
-npm start
-
-# OR using Yarn
-yarn start
+npm install -g detox-cli
 ```
 
-## Step 2: Start your Application
-
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
-
-### For Android
+Install Detox and React Native dependencies in your project:
 
 ```bash
-# using npm
-npm run android
-
-# OR using Yarn
-yarn android
+npm install detox --save-dev
+npm install react-native-testing-library --save-dev
 ```
 
-### For iOS
+For Android, you'll need Detox and React Native version compatibility.
+
+If you're using React Native 0.71 or later, run:
 
 ```bash
-# using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
+npx react-native init DetoxPOC
 ```
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+### Step 2: Configure Detox in `package.json`
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+Now you need to configure Detox in your `package.json` file. Add the following Detox configuration for Android:
 
-## Step 3: Modifying your App
+```json
+"detox": {
+  "configurations": {
+    "android.emu.debug": {
+      "device": {
+        "type": "android.emulator",
+        "name": "Pixel_4_API_30",  // Update with your emulator name
+        "architecture": "x86_64"
+      },
+      "app": {
+        "binaryPath": "android/app/build/outputs/apk/debug/app-debug.apk",
+        "build": "gradle assembleDebug"
+      },
+      "tests": {
+        "testRunner": "jest"
+      }
+    }
+  }
+}
+```
 
-Now that you have successfully run the app, let's modify it.
+### Step 3: Install Detox and Jest
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+Install Detox:
 
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+```bash
+npm i -D detox
+```
 
-## Congratulations! :tada:
+Initialize Detox:
 
-You've successfully run and modified your React Native App. :partying_face:
+```bash
+npm detox init
+```
 
-### Now what?
+Install Jest:
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
+```bash
+npm install --save-dev jest
+```
 
-# Troubleshooting
+### Step 4: Modify `android/build.gradle`
 
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+In the `android` folder, add the following block in your `build.gradle` file:
 
-# Learn More
+```gradle
+allprojects {
+  repositories {
+    ...
+    google()
+    maven {
+      url "$rootDir/../node_modules/detox/Detox-android"
+    }
+    maven { url 'https://www.jitpack.io' }
+  }
+}
+```
 
-To learn more about React Native, take a look at the following resources:
+Make sure the `minSdkVersion` is set to **24** or higher.
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+### Step 5: Modify `android/app/build.gradle`
+
+In `android/app/build.gradle`, under the `defaultConfig` block, add the following:
+
+```gradle
+testBuildType System.getProperty('testBuildType', 'debug')
+testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+```
+
+Under the `buildTypes` block, add:
+
+```gradle
+proguardFile "${rootProject.projectDir}/../node_modules/detox/android/detox/proguard-rules-app.pro"
+```
+
+In the `dependencies` block, add:
+
+```gradle
+androidTestImplementation('com.wix:detox:+')
+implementation 'androidx.appcompat:appcompat:1.1.0'
+```
+
+### Step 6: Create Detox Test File
+
+Create a folder under `android/app/src/` as `androidTest/java/com/detoxpoc/DetoxTest.java`. Add the content as per the [Detox project setup documentation](https://wix.github.io/Detox/docs/introduction/project-setup).
+
+### Step 7: Configure Network Security
+
+Under `android/app/src/main/res`, create a folder called `xml` and create the file `network_security_config.xml`. Paste the values as shown in the Detox documentation.
+
+In `android/app/src/main/AndroidManifest.xml`, add the following line:
+
+```xml
+android:networkSecurityConfig="@xml/network_security_config"
+```
+
+### Step 8: Build with Detox
+
+To build the app for testing, run:
+
+```bash
+detox build --configuration android.emu.debug
+```
