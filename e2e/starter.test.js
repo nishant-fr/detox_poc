@@ -1,3 +1,7 @@
+const { device, expect, element, by } = require('detox');
+
+jest.setTimeout(10000); // 5 minutes
+
 describe('Example', () => {
   beforeAll(async () => {
     await device.launchApp();

@@ -1,7 +1,5 @@
 /** @type {Detox.DetoxConfig} */
 module.exports = {
-  testRunner: 'jest',
-  runnerConfig: 'e2e/jest.config.js',
   apps: {
     'ios.debug': {
       type: 'ios.app',
