@@ -134,3 +134,15 @@ To build the app for testing, run:
 ```bash
 npm run detox:build-android
 ```
+
+To run the app for testing, run:
+
+In one terminal, use folowing:
+```bash
+npm start
+```
+
+In other termninal, to start test, use following
+```bash
+npm run detox:test-android
+```
